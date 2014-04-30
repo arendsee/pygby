@@ -6,6 +6,7 @@ import argparse
 from itertools import chain
 
 __version__ = '1.0'
+__prog__ = 'pygby'
 
 class FunMap:
     def _sd():
@@ -249,7 +250,8 @@ class Parser:
                     d['record'] = keep(d['record'])
 
     def _get_args(self):
-        parser = argparse.ArgumentParser(prog='pygby')
+        parser = argparse.ArgumentParser(
+            prog=__prog__,)
         parser.add_argument(
             '--version',
             help='Display version',
