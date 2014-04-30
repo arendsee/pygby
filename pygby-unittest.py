@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import pymerge
+import pygby
 import unittest
 from tempfile import TemporaryFile
 import csv
 
-class TestPymerge(unittest.TestCase):
+class Testpygby(unittest.TestCase):
     def setUp(self):
         self.testdatarow = ((1,2,3),(5,5,5),(1,10,5))
 
@@ -44,12 +44,12 @@ class TestPymerge(unittest.TestCase):
                 'mean': None,
                 'out': t1_out.name
                 }
-        self.funman = pymerge.FunManager(defargs)
+        self.funman = pygby.FunManager(defargs)
 
     def test_numeric_operations(self):
         empty = ()
 
-        fm = pymerge.FunMap.funmap
+        fm = pygby.FunMap.funmap
         args = ('max', 'smax', 'min', 'smin', 'sum', 'mean', 'median')
 
         # Test correct output for numeric maps
@@ -103,7 +103,7 @@ class TestPymerge(unittest.TestCase):
                 'ids':[[1]],
                 'indel':',',
                 'outdel':None}
-        parg = pymerge.Parser().parse_args(args)
+        parg = pygby.Parser().parse_args(args)
         self.assertEqual(parg['min'], (0,2))
         self.assertEqual(set(parg['smin'][0].keys()), {'by', 'record'})
         self.assertEqual(set(parg['smin'][0].values()), {0, (1,2)})
@@ -117,7 +117,7 @@ class TestPymerge(unittest.TestCase):
                 'ids':[[1,2]],
                 'indel':',',
                 'outdel':None}
-        parg = pymerge.Parser().parse_args(args)
+        parg = pygby.Parser().parse_args(args)
         self.assertEqual(parg['min'], (0,1,2))
         self.assertEqual(set(parg['smin'][1].keys()), {'by', 'record'})
         self.assertEqual(set(parg['smin'][1].values()), {2, (3,4,5)})
