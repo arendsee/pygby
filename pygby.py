@@ -5,7 +5,7 @@ import sys
 import argparse
 from itertools import chain
 
-__version__ '1.0'
+__version__ = '1.0'
 
 class FunMap:
     def _sd():
