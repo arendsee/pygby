@@ -196,8 +196,8 @@ class Reader:
             self.idnames = tuple(first[i] for i in funman.ids)
             self.colnames = tuple(first[i] for i in funman.datids)
         else:
-            self.idnames = tuple('Col%d' % i for i in funman.ids)
-            self.colnames = tuple('Col%d' % i for i in funman.datids)
+            self.idnames = tuple('Col%d' % int(i + 1) for i in funman.ids)
+            self.colnames = tuple('Col%d' % int(i + 1) for i in funman.datids)
 
         # Iterate through the rows assigning data columns to id keys
         data = []
@@ -229,7 +229,7 @@ class Parser:
 
         @param values: input fields corresponding to csv columns
         @type values: iterable
-        @param ids: group-by column indices
+        @param ids: groupby column indices
         @type ids: iterable
         @return: set<int>
         '''
@@ -250,6 +250,84 @@ class Parser:
                     d['record'] = keep(d['record'])
 
     def _get_args(self):
+        class ListAction(argparse.Action):
+            def __init__(self,
+                        option_strings,
+                        dest,
+                        default=None,
+                        help=None,
+                        metavar=None):
+                super(ListAction, self).__init__(
+                    option_strings=option_strings,
+                    dest=dest,
+                    nargs='+',
+                    const=None,
+                    default=default,
+                    type=int,
+                    choices=None,
+                    required=False,
+                    help=help,
+                    metavar=metavar)
+
+            def tozero(self, values):
+                '''
+                Converts 1-based vectors to 0-base vectors
+                '''
+                # Check all indices are greater than 0
+                if(any([v < 1 for v in values])):
+                   print('Column indices must be greater than 0 (numbering begins at 1 not 0)',
+                         file=sys.stderr)
+                   raise SystemExit
+                # Convert to 0-based indices
+                return([v - 1 for v in values])
+
+            def getprior(self, namespace):
+                '''
+                Retrieves input from prior argument (e.g. pygby --max 8 --max 2 3)
+                '''
+                from copy import copy
+                prior = copy(argparse._ensure_value(namespace, self.dest, []))
+                return(prior)
+
+        class ColumnList(ListAction):
+            '''
+            Converts input to 0-based list of sorted unique integers
+            '''
+            def __call__(self, parser, namespace, values, option_string=None):
+                values = self.tozero(values)
+                prior = set(self.getprior(namespace))
+                prior.update(values)
+                prior = sorted(prior)
+                setattr(namespace, self.dest, prior)
+
+        class SelectList(ListAction):
+            def __call__(self, parser, namespace, values, option_string=None):
+                '''
+                Converts input to list<dict> where dicts are of form:
+                    {'by':<int>, 'record':list<int>>}
+                - 'by' == values[0], 'record' == values[1:]
+                - 'record' list includes sorted unique values
+                - all integers are converted to 0-base
+                - identical 'by' entries are merged
+                '''
+                if len(values) < 2:
+                    print('Select options (smin and smax) require at least 2 options:\n'
+                          'arg1 determines which row to keep, arg2+ determines which'
+                          'elements to record',
+                          file=sys.stderr)
+                    raise SystemExit
+                values = self.tozero(values)
+                prior = self.getprior(namespace)
+                d = {'by':values[0], 'record':sorted(values[1:])}
+                for p in prior:
+                    if p['by'] == d['by']:
+                        p['record'] += d['record']
+                        p['record'] = sorted(set(p['record']))
+                        setattr(namespace, self.dest, prior)
+                        return
+                prior.append(d)
+                setattr(namespace, self.dest, prior)
+
         parser = argparse.ArgumentParser(
             prog=__prog__,
             description='Group csv file by given columns and report various info about other columns'
@@ -303,109 +381,113 @@ class Parser:
         )
         # Type: list<list<int>>
         parser.add_argument(
-            '-g', '--group-by', dest='ids', metavar='int',
+            '-g', '--groupby', dest='ids', metavar='int',
             help='Indices by which to group (default=0)',
-            type=int,
-            action='append',
-            nargs='+'
+            default=[0],
+            action=ColumnList,
         )
         parser.add_argument(
             '--smax', dest='smax', metavar='int',
             help='Select row elements where column is maximal (ARG1 = max column, ARG2+ = printed columns)',
-            type=int,
-            action='append',
-            nargs='+'
+            action=SelectList,
         )
         parser.add_argument(
             '--smin', dest='smin', metavar='int',
             help='Like kmax, but with minimal values',
-            type=int,
-            action='append',
-            nargs='+'
+            action=SelectList,
         )
         parser.add_argument(
             '--max', dest='max', metavar='int',
-            help="Select rows with maximal values in numeric columns",
-            type=int,
-            action='append',
-            nargs='+'
+            help="Select maximal value in given numeric columns",
+            action=ColumnList,
         )
         parser.add_argument(
             '--min', dest='min', metavar='int',
-            help="Select minimal values in given numeric columns",
-            type=int,
-            action='append',
-            nargs='+'
+            help="Select minimal value in given numeric columns",
+            action=ColumnList,
         )
         parser.add_argument(
             '--sum', dest='sum', metavar='int',
             help="Sum across given numeric columns",
-            type=int,
-            action='append',
-            nargs='+'
+            action=ColumnList,
         )
         parser.add_argument(
             '--mean', dest='mean', metavar='int',
             help="Calculate mean across given numeric columns",
-            type=int,
-            action='append',
-            nargs='+'
+            action=ColumnList,
         )
         parser.add_argument(
             '--median', dest='median', metavar='int',
             help="Calculate median across given numeric columns",
-            type=int,
-            action='append',
-            nargs='+'
+            action=ColumnList,
         )
         parser.add_argument(
             '--sd', dest='sd', metavar='int',
             help="Calculate standard deviation across given numeric columns",
-            type=int,
-            action='append',
-            nargs='+'
+            action=ColumnList,
         )
 
         if(len(sys.argv) == 1):
             parser.print_help()
             raise SystemExit
 
-        return(vars(parser.parse_args()))
+        args = vars(parser.parse_args())
+
+        return(args)
 
     def parse_args(self, args=None):
-        from collections import defaultdict
+        '''
+        - sets argument defaults where needed
+        - identify columns that undergo numerical operations for subsequent
+        conversion to floats.
+        - identify all columns that are used, unused columns can be ignored,
+        thus improving memory efficiency
+
+        Internally each line of input data is converted to two tuples: an id
+        tuple and a data tuple. The user-provided data ids and group ids are
+        converted to indices in these tuples.
+
+        Example:
+            pygby --groupby 1 5 --min 2 8 9 --max 6
+        argparse yields:
+            args.min -> [1,7,8]
+            args.ids -> [0,4]
+            args.max -> [5]
+        this function converts these to:
+            - Map to internal tuples
+            args['min'] -> [0,2,3]
+            args['max'] -> [1]
+            args['ids'] -> [0,1]
+            - Map to external csv columns
+            args['floats'] -> [1,5,7,8]
+            args['allids'] -> [0,1,4,5,7,8]
+        '''
         if not args:
             args = self._get_args()
-        try:
-            args['ids'] = {x for x in chain(*args['ids'])}
-        except:
-            args['ids'] = {0}
-        args['floats'] = set()
-        args['allids'] = set()
+
         # If no output delimiter is chosen, set to input delimiter
         if not args['outdel']:
             args['outdel'] = args['indel']
+
+        args['floats'] = set()
+        args['allids'] = set()
         for k,v in args.items():
-            # Columns that will enter simple functions: convert to sets
-            if(k in FunMap.numeric and v):
-                args[k] = tuple(sorted(set(chain(*v))))
+            if k in FunMap.numeric and v:
                 args['floats'].update(args[k])
             # Selection based entries, convert to dicts with 'by' as key and
             # 'selected' as values
-            if(k in FunMap.select and v):
-                sel = defaultdict(set)
+            if k in FunMap.select and v:
                 for w in v:
-                    # If the only value is an id, ignore the stupid user
-                    if(all([x in args['ids'] for x in w[1:]]) or w[0] in args['ids']):
+                    # If by is an id column or if all the recordings are ids,
+                    # there is nothing to report, so delete item
+                    if w['by'] in args['ids'] or all([x in args['ids'] for x in w['record']]):
+                        del v[v.index(w)]
                         continue
-                    args['floats'].update([w[0]])
-                    args['allids'].update(w)
-                    sel[w[0]].update(w[1:])
-                keys = sorted(sel.keys())
-                args[k] = tuple({'by':j, 'record':tuple(sorted(sel[j]))} for j in keys)
+                    args['floats'].update([w['by']])
+                    args['allids'].update(w['record'])
             args['allids'].update(args['floats'])
             args['allids'] = args['allids'] - set(args['ids'])
-        ids2remove = args['ids'] | set(range(max(args['allids']) + 1)) - args['allids']
+        ids2remove = set(args['ids']) | set(range(max(args['allids']) + 1)) - args['allids']
         self._reindex_args(ids2remove, args)
         return(args)
 
