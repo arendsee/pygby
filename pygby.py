@@ -5,6 +5,8 @@ import sys
 import argparse
 from itertools import chain
 
+__version__ '1.0'
+
 class FunMap:
     def _sd():
         '''
@@ -252,7 +254,7 @@ class Parser:
             '--version',
             help='Display version',
             action='version',
-            version='%(prog)s 0.3.0'
+            version='%(prog)s {}'.format(__version__)
         )
         # Type: readable
         parser.add_argument(
@@ -357,6 +359,11 @@ class Parser:
             action='append',
             nargs='+'
         )
+
+        if(len(sys.argv) == 1):
+            parser.print_help()
+            raise SystemExit
+
         return(vars(parser.parse_args()))
 
     def parse_args(self, args=None):
