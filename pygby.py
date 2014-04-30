@@ -251,7 +251,9 @@ class Parser:
 
     def _get_args(self):
         parser = argparse.ArgumentParser(
-            prog=__prog__,)
+            prog=__prog__,
+            description='Group csv file by given columns and report various info about other columns'
+        )
         parser.add_argument(
             '--version',
             help='Display version',
@@ -263,6 +265,7 @@ class Parser:
             '-i', '--in',
             help='Input csv file (default: stdin)',
             nargs='?',
+            metavar='str',
             type=argparse.FileType('r'),
             default=sys.stdin
         )
@@ -271,6 +274,7 @@ class Parser:
             '-o', '--out',
             help='Output csv file (default: stdin)',
             nargs='?',
+            metavar='str',
             type=argparse.FileType('w'),
             default=sys.stdout
         )
@@ -289,73 +293,73 @@ class Parser:
         )
         # Type: str
         parser.add_argument(
-            '-d', '--in-delimiter', dest='indel', metavar='in-delimiter',
+            '-d', '--in-delimiter', dest='indel', metavar='int',
             help='Column delimiter (default=TAB)',
             default='\t'
         )
         parser.add_argument(
-            '--out-delimiter', dest='outdel', metavar='out-delimiter',
+            '--out-delimiter', dest='outdel', metavar='int',
             help='Column output delimiter (default=in-delimiter)'
         )
         # Type: list<list<int>>
         parser.add_argument(
-            '-g', '--group-by', dest='ids', metavar='ids',
+            '-g', '--group-by', dest='ids', metavar='int',
             help='Indices by which to group (default=0)',
             type=int,
             action='append',
             nargs='+'
         )
         parser.add_argument(
-            '--smax', dest='smax', metavar='smax',
+            '--smax', dest='smax', metavar='int',
             help='Select row elements where column is maximal (ARG1 = max column, ARG2+ = printed columns)',
             type=int,
             action='append',
             nargs='+'
         )
         parser.add_argument(
-            '--smin', dest='smin', metavar='smin',
+            '--smin', dest='smin', metavar='int',
             help='Like kmax, but with minimal values',
             type=int,
             action='append',
             nargs='+'
         )
         parser.add_argument(
-            '--max', dest='max', metavar='max',
+            '--max', dest='max', metavar='int',
             help="Select rows with maximal values in numeric columns",
             type=int,
             action='append',
             nargs='+'
         )
         parser.add_argument(
-            '--min', dest='min', metavar='min',
+            '--min', dest='min', metavar='int',
             help="Select minimal values in given numeric columns",
             type=int,
             action='append',
             nargs='+'
         )
         parser.add_argument(
-            '--sum', dest='sum', metavar='sum',
+            '--sum', dest='sum', metavar='int',
             help="Sum across given numeric columns",
             type=int,
             action='append',
             nargs='+'
         )
         parser.add_argument(
-            '--mean', dest='mean', metavar='mean',
+            '--mean', dest='mean', metavar='int',
             help="Calculate mean across given numeric columns",
             type=int,
             action='append',
             nargs='+'
         )
         parser.add_argument(
-            '--median', dest='median', metavar='median',
+            '--median', dest='median', metavar='int',
             help="Calculate median across given numeric columns",
             type=int,
             action='append',
             nargs='+'
         )
         parser.add_argument(
-            '--sd', dest='sd', metavar='sd',
+            '--sd', dest='sd', metavar='int',
             help="Calculate standard deviation across given numeric columns",
             type=int,
             action='append',
