@@ -249,7 +249,7 @@ class Parser:
                     d['by'] = reindex(d['by'])
                     d['record'] = keep(d['record'])
 
-    def _get_args(self):
+    def _get_args(self, arglist=None):
         class ListAction(argparse.Action):
             def __init__(self,
                         option_strings,
@@ -431,11 +431,11 @@ class Parser:
             parser.print_help()
             raise SystemExit
 
-        args = vars(parser.parse_args())
+        args = vars(parser.parse_args(arglist))
 
         return(args)
 
-    def parse_args(self, args=None):
+    def parse_args(self, arglist=None):
         '''
         - sets argument defaults where needed
         - identify columns that undergo numerical operations for subsequent
@@ -462,8 +462,7 @@ class Parser:
             args['floats'] -> [1,5,7,8]
             args['allids'] -> [0,1,4,5,7,8]
         '''
-        if not args:
-            args = self._get_args()
+        args = self._get_args(arglist)
 
         # If no output delimiter is chosen, set to input delimiter
         if not args['outdel']:
@@ -491,8 +490,8 @@ class Parser:
         self._reindex_args(ids2remove, args)
         return(args)
 
-def write():
-    args = Parser().parse_args()
+def write(arglist=None):
+    args = Parser().parse_args(arglist)
     funman = FunManager(args)
     reader = Reader(funman)
     writer = funman.get_writer()
