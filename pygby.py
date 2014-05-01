@@ -487,9 +487,13 @@ class Parser:
                     args['floats'].update([w['by']])
                     args['allids'].update(w['record'])
             args['allids'].update(args['floats'])
+        try:
             args['allids'] = args['allids'] - set(args['ids'])
-        ids2remove = set(args['ids']) | set(range(max(args['allids']) + 1)) - args['allids']
-        self._reindex_args(ids2remove, args)
+            ids2remove = set(args['ids']) | set(range(max(args['allids']) + 1)) - args['allids']
+            self._reindex_args(ids2remove, args)
+        except ValueError:
+            # If this error occurs, then there are no data columns. This is fine.
+            pass
         return(args)
 
 def write(arglist=None, returnlist=False):
