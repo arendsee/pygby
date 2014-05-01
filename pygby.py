@@ -80,6 +80,7 @@ class FunManager:
     def __init__(self, args):
         self._args = args
         self.header = args['header']
+        self.silent_header = args['silent_header']
         self.ids = sorted(args['ids'])
         self.datids = sorted(args['allids'].difference(args['ids']))
         # List of functions to perform on data row to make output row
@@ -372,7 +373,7 @@ class Parser:
         # Type: bool
         parser.add_argument(
             '--header', dest='header',
-            help="First row is a header (one name per column)",
+            help="First row of input is a header",
             action="store_true",
             default=False
         )
@@ -380,6 +381,12 @@ class Parser:
             '--count', dest='count',
             help="Count number of groups",
             action="store_true",
+            default=False
+        )
+        parser.add_argument(
+            '--silent-header', '-s',
+            help='Do not print header',
+            action='store_true',
             default=False
         )
         # Type: str

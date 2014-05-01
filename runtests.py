@@ -12,7 +12,6 @@ def lol2dict(lol):
     return(d)
 
 class Testpygby(unittest.TestCase):
-
     def vector2file(self, x):
         f1 = NamedTemporaryFile()
         x = ['\t'.join([str(z) for z in y]) for y in x]
@@ -58,6 +57,7 @@ class Testpygby(unittest.TestCase):
 
         defargs = {'count': True,
                 'header': True,
+                'silent_header': False,
                 'indel': '\t',
                 'outdel': '\t',
                 'ids': (3,),
