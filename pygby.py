@@ -121,8 +121,8 @@ class FunManager:
 
         # Append count if user desires
         if self._args['count']:
-            df.append(lambda x: len(x))
-            nf.append(lambda x: 'count')
+            df.append(lambda x: [len(x)])
+            nf.append(lambda x: ['count'])
 
         self._data_fun = df
         self._head_fun = nf
@@ -249,7 +249,7 @@ class Parser:
                     d['by'] = reindex(d['by'])
                     d['record'] = keep(d['record'])
 
-    def _get_args(self):
+    def _get_args(self, arglist=None):
         class ListAction(argparse.Action):
             def __init__(self,
                         option_strings,
@@ -383,7 +383,6 @@ class Parser:
         parser.add_argument(
             '-g', '--groupby', dest='ids', metavar='int',
             help='Indices by which to group (default=0)',
-            default=[0],
             action=ColumnList,
         )
         parser.add_argument(
@@ -427,15 +426,15 @@ class Parser:
             action=ColumnList,
         )
 
-        if(len(sys.argv) == 1):
+        if(len(sys.argv) == 1 and not arglist):
             parser.print_help()
             raise SystemExit
 
-        args = vars(parser.parse_args())
+        args = vars(parser.parse_args(arglist))
 
         return(args)
 
-    def parse_args(self, args=None):
+    def parse_args(self, arglist=None):
         '''
         - sets argument defaults where needed
         - identify columns that undergo numerical operations for subsequent
@@ -462,8 +461,10 @@ class Parser:
             args['floats'] -> [1,5,7,8]
             args['allids'] -> [0,1,4,5,7,8]
         '''
-        if not args:
-            args = self._get_args()
+        args = self._get_args(arglist)
+
+        if not args['ids']:
+            args['ids'] = [0]
 
         # If no output delimiter is chosen, set to input delimiter
         if not args['outdel']:
@@ -486,19 +487,28 @@ class Parser:
                     args['floats'].update([w['by']])
                     args['allids'].update(w['record'])
             args['allids'].update(args['floats'])
+        try:
             args['allids'] = args['allids'] - set(args['ids'])
-        ids2remove = set(args['ids']) | set(range(max(args['allids']) + 1)) - args['allids']
-        self._reindex_args(ids2remove, args)
+            ids2remove = set(args['ids']) | set(range(max(args['allids']) + 1)) - args['allids']
+            self._reindex_args(ids2remove, args)
+        except ValueError:
+            # If this error occurs, then there are no data columns. This is fine.
+            pass
         return(args)
 
-def write():
-    args = Parser().parse_args()
+def write(arglist=None, returnlist=False):
+    args = Parser().parse_args(arglist)
     funman = FunManager(args)
     reader = Reader(funman)
     writer = funman.get_writer()
-    writer.writerow(funman.get_out_header(reader))
-    for ids,dat in reader.data:
-        writer.writerow(funman.get_outrow(ids, dat))
+    if returnlist:
+        out = [funman.get_out_header(reader)]
+        out += [list(funman.get_outrow(i, d)) for i,d in reader.data]
+        return(out)
+    else:
+        writer.writerow(funman.get_out_header(reader))
+        for ids,dat in reader.data:
+            writer.writerow(funman.get_outrow(ids, dat))
 
 if __name__ == '__main__':
     write()
