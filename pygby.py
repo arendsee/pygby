@@ -121,8 +121,8 @@ class FunManager:
 
         # Append count if user desires
         if self._args['count']:
-            df.append(lambda x: len(x))
-            nf.append(lambda x: 'count')
+            df.append(lambda x: [len(x)])
+            nf.append(lambda x: ['count'])
 
         self._data_fun = df
         self._head_fun = nf
