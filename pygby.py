@@ -191,18 +191,31 @@ class Reader:
     def _read(self, funman):
         csvreader = funman.get_reader()
 
+        def indexErrorReport(ncol):
+            print('You request action on column %d, but the data '
+                  'appear to have only %d column(s)' % \
+                  (max(funman.ids + funman.datids) + 1, ncol),
+                  file=sys.stderr)
+            raise SystemExit
+
         if(funman.header):
-            first = next(csvreader)
-            self.idnames = tuple(first[i] for i in funman.ids)
-            self.colnames = tuple(first[i] for i in funman.datids)
+            try:
+                first = next(csvreader)
+                self.idnames = tuple(first[i] for i in funman.ids)
+                self.colnames = tuple(first[i] for i in funman.datids)
+            except IndexError:
+                indexErrorReport(len(first))
         else:
             self.idnames = tuple('Col%d' % int(i + 1) for i in funman.ids)
             self.colnames = tuple('Col%d' % int(i + 1) for i in funman.datids)
 
         # Iterate through the rows assigning data columns to id keys
         data = []
-        for row in csvreader:
-            data.append((tuple(row[i] for i in funman.ids), funman.get_datarow(row)))
+        try:
+            for row in csvreader:
+                data.append((tuple(row[i] for i in funman.ids), funman.get_datarow(row)))
+        except IndexError:
+            indexErrorReport(len(row))
 
         def tuplend(x):
             x[-1] = (x[-1][0], tuple(tuple(y) for y in x[-1][1]))
