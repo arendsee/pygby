@@ -229,7 +229,7 @@ class Parser:
 
         @param values: input fields corresponding to csv columns
         @type values: iterable
-        @param ids: groupby column indices
+        @param ids: group-by column indices
         @type ids: iterable
         @return: set<int>
         '''
@@ -381,7 +381,7 @@ class Parser:
         )
         # Type: list<list<int>>
         parser.add_argument(
-            '-g', '--groupby', dest='ids', metavar='int',
+            '-g', '--group-by', dest='ids', metavar='int',
             help='Indices by which to group (default=0)',
             action=ColumnList,
         )
@@ -447,7 +447,7 @@ class Parser:
         converted to indices in these tuples.
 
         Example:
-            pygby --groupby 1 5 --min 2 8 9 --max 6
+            pygby --group-by 1 5 --min 2 8 9 --max 6
         argparse yields:
             args.min -> [1,7,8]
             args.ids -> [0,4]

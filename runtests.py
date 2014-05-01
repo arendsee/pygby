@@ -142,7 +142,7 @@ class Testpygby(unittest.TestCase):
 
         # Assert most basic function
         sys.stdin = open(self.infile.name, 'r')
-        args = ['--groupby', '2',
+        args = ['-g', '2',
                 '--min', '3',
                 '-d', '\t',
                 '--header']
@@ -151,7 +151,7 @@ class Testpygby(unittest.TestCase):
 
         # Assert grouping of data columns
         sys.stdin = open(self.infile.name, 'r')
-        args = ['--groupby', '2',
+        args = ['-g', '2',
                 '--min', '5', '1',
                 '--min', '5', '3',
                 '-d', '\t',
@@ -163,7 +163,7 @@ class Testpygby(unittest.TestCase):
 
         # Assert grouping of ids
         sys.stdin = open(self.infile.name, 'r')
-        args = ['--groupby', '2', '4',
+        args = ['-g', '2', '4',
                 '--min', '5', '1',
                 '--min', '5', '3',
                 '-d', '\t',
@@ -177,7 +177,7 @@ class Testpygby(unittest.TestCase):
 
         # Assert selection
         sys.stdin = open(self.infile.name, 'r')
-        args = ['--groupby', '2',
+        args = ['-g', '2',
                 '--smax', '1', '3', '5',
                 '--smax', '3', '5',
                 '-d', '\t',
@@ -189,7 +189,7 @@ class Testpygby(unittest.TestCase):
 
         # Assert calculations
         sys.stdin = open(self.infile.name, 'r')
-        args = ['--groupby', '2',
+        args = ['-g', '2',
                 '--count',
                 '-d', '\t',
                 '--header']
