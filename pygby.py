@@ -5,7 +5,7 @@ import sys
 import argparse
 from itertools import chain
 
-__version__ = '1.1'
+__version__ = '1.2'
 __prog__ = 'pygby'
 
 class FunMap:
