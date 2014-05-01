@@ -5,7 +5,7 @@ import sys
 import argparse
 from itertools import chain
 
-__version__ = '1.2'
+__version__ = '1.3'
 __prog__ = 'pygby'
 
 class FunMap:
@@ -134,7 +134,7 @@ class FunManager:
         @return: a csv reader according to user input
         @rtype: csv.reader
         '''
-        reader = csv.reader(self._args['in'], delimiter=self._args['outdel'])
+        reader = csv.reader(self._args['in'], delimiter=self._args['indel'])
         return(reader)
 
     def get_writer(self):
@@ -191,18 +191,31 @@ class Reader:
     def _read(self, funman):
         csvreader = funman.get_reader()
 
+        def indexErrorReport(ncol):
+            print('You request action on column %d, but the data '
+                  'appear to have only %d column(s)' % \
+                  (max(funman.ids + funman.datids) + 1, ncol),
+                  file=sys.stderr)
+            raise SystemExit
+
         if(funman.header):
-            first = next(csvreader)
-            self.idnames = tuple(first[i] for i in funman.ids)
-            self.colnames = tuple(first[i] for i in funman.datids)
+            try:
+                first = next(csvreader)
+                self.idnames = tuple(first[i] for i in funman.ids)
+                self.colnames = tuple(first[i] for i in funman.datids)
+            except IndexError:
+                indexErrorReport(len(first))
         else:
             self.idnames = tuple('Col%d' % int(i + 1) for i in funman.ids)
             self.colnames = tuple('Col%d' % int(i + 1) for i in funman.datids)
 
         # Iterate through the rows assigning data columns to id keys
         data = []
-        for row in csvreader:
-            data.append((tuple(row[i] for i in funman.ids), funman.get_datarow(row)))
+        try:
+            for row in csvreader:
+                data.append((tuple(row[i] for i in funman.ids), funman.get_datarow(row)))
+        except IndexError:
+            indexErrorReport(len(row))
 
         def tuplend(x):
             x[-1] = (x[-1][0], tuple(tuple(y) for y in x[-1][1]))
@@ -229,7 +242,7 @@ class Parser:
 
         @param values: input fields corresponding to csv columns
         @type values: iterable
-        @param ids: groupby column indices
+        @param ids: group-by column indices
         @type ids: iterable
         @return: set<int>
         '''
@@ -381,7 +394,7 @@ class Parser:
         )
         # Type: list<list<int>>
         parser.add_argument(
-            '-g', '--groupby', dest='ids', metavar='int',
+            '-g', '--group-by', dest='ids', metavar='int',
             help='Indices by which to group (default=0)',
             action=ColumnList,
         )
@@ -447,7 +460,7 @@ class Parser:
         converted to indices in these tuples.
 
         Example:
-            pygby --groupby 1 5 --min 2 8 9 --max 6
+            pygby --group-by 1 5 --min 2 8 9 --max 6
         argparse yields:
             args.min -> [1,7,8]
             args.ids -> [0,4]
