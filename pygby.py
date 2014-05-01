@@ -427,7 +427,7 @@ class Parser:
             action=ColumnList,
         )
 
-        if(len(sys.argv) == 1):
+        if(len(sys.argv) == 1 and not arglist):
             parser.print_help()
             raise SystemExit
 
@@ -490,14 +490,19 @@ class Parser:
         self._reindex_args(ids2remove, args)
         return(args)
 
-def write(arglist=None):
+def write(arglist=None, returnlist=False):
     args = Parser().parse_args(arglist)
     funman = FunManager(args)
     reader = Reader(funman)
     writer = funman.get_writer()
-    writer.writerow(funman.get_out_header(reader))
-    for ids,dat in reader.data:
-        writer.writerow(funman.get_outrow(ids, dat))
+    if returnlist:
+        out = [funman.get_out_header(reader)]
+        out += [list(funman.get_outrow(i, d)) for i,d in reader.data]
+        return(out)
+    else:
+        writer.writerow(funman.get_out_header(reader))
+        for ids,dat in reader.data:
+            writer.writerow(funman.get_outrow(ids, dat))
 
 if __name__ == '__main__':
     write()
