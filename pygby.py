@@ -134,7 +134,7 @@ class FunManager:
         @return: a csv reader according to user input
         @rtype: csv.reader
         '''
-        reader = csv.reader(self._args['in'], delimiter=self._args['outdel'])
+        reader = csv.reader(self._args['in'], delimiter=self._args['indel'])
         return(reader)
 
     def get_writer(self):
