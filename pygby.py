@@ -516,19 +516,22 @@ class Parser:
             pass
         return(args)
 
+
 def write(arglist=None, returnlist=False):
     args = Parser().parse_args(arglist)
     funman = FunManager(args)
     reader = Reader(funman)
-    writer = funman.get_writer()
+
+    def row_iter():
+        if not funman.silent_header:
+            yield funman.get_out_header(reader)
+        for i,d in reader.data:
+            yield funman.get_outrow(i, d)
+
     if returnlist:
-        out = [funman.get_out_header(reader)]
-        out += [list(funman.get_outrow(i, d)) for i,d in reader.data]
-        return(out)
+        return([list(r) for r in row_iter()])
     else:
-        writer.writerow(funman.get_out_header(reader))
-        for ids,dat in reader.data:
-            writer.writerow(funman.get_outrow(ids, dat))
+        funman.get_writer().writerows(row_iter())
 
 if __name__ == '__main__':
     write()

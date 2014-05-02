@@ -2,5 +2,3 @@
     - order by given columns
     - order by input order on given columns
     - order by input order on ids
-
-- Add --no-out-header option
