@@ -4,17 +4,62 @@ import csv
 import sys
 import argparse
 from itertools import chain
+import math
 
 __version__ = 'development'
 __prog__ = 'pygby'
 
 class FunMap:
+
+    def sequential(x):
+        if not all([y % 1 < 1e-5 for y in x]):
+            print('Adjacency can only be calculated for integers', file=sys.stderr)
+            raise SystemExit
+        dis = [x[i] - x[i-1] for i in range(1,len(x))]
+        is_seq = 1 if all([math.fabs(d - 1) < 1e-5 for d in dis]) else 0
+        return(is_seq)
+
+
+    def _seq():
+        '''
+        Prepares an anonymous sequencial testing function.
+        '''
+        def seq(x):
+            '''
+            Returns 1 if the sorted values are sequential integers, else returns 0
+
+            @param x: vector of floats
+            @type x: iterable<float>
+            @return: sequential
+            @rtype: boolean (0 or 1)
+            '''
+            x.sort()
+            is_seq = FunMap.sequential(x)
+            return(is_seq)
+        return(seq)
+
+    def _adj():
+        '''
+        Prepares an anonymous adjacency function.
+        '''
+        def adj(x):
+            '''
+            Returns 1 if the greatest distance between any two sorted values is
+            1, else returns 0
+
+            @param x: vector of floats
+            @type x: iterable<float>
+            @return: adjacent
+            @rtype: boolean (0 or 1)
+            '''
+            x = sorted(set(x))
+            is_adj = FunMap.sequential(x)
+            return(is_adj)
+        return(adj)
+
     def _sd():
         '''
         Prepares an anonymous standard deviation calculating function
-
-        @return: Standard deviation function
-        @rtype: function
         '''
         def sd(x):
             '''
@@ -57,7 +102,7 @@ class FunMap:
             return(x[half] if isodd else sum(x[half-1:half+1])/2)
         return(median)
 
-    numeric = ('max', 'min', 'mean', 'median', 'sd', 'sum')
+    numeric = ('max', 'min', 'mean', 'median', 'sd', 'sum', 'seq', 'adj')
     select = ('smax', 'smin')
     funmap = {
         'max':max,
@@ -67,6 +112,8 @@ class FunMap:
         'sum':sum,
         'mean':lambda x: sum(x) / len(x),
         'median':_median(),
+        'adj':_adj(),
+        'seq':_seq(),
         'sd':_sd(),
     }
 
@@ -438,6 +485,16 @@ class Parser:
         parser.add_argument(
             '--median', dest='median', metavar='int',
             help="Calculate median across given numeric columns",
+            action=ColumnList,
+        )
+        parser.add_argument(
+            '--seq', dest='seq', metavar='int',
+            help="Test if sorted integer values are sequential",
+            action=ColumnList,
+        )
+        parser.add_argument(
+            '--adj', dest='adj', metavar='int',
+            help="Test if sorted integer values are adjacent (repeats allowed)",
             action=ColumnList,
         )
         parser.add_argument(

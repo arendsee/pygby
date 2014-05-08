@@ -69,6 +69,8 @@ class Testpygby(unittest.TestCase):
                 'mean': None,
                 'smin': ({'by':0, 'record':(1,)},),
                 'smax': None,
+                'seq': None,
+                'adj': None,
                 'allids': {0,1,2},
                 'floats': {0,2}
                 }
